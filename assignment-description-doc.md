@@ -7,7 +7,7 @@
 <br />
 [link 2](https://www.nutanix.com/blog/understanding-web-scale-properties#:~:text=Web%2Dscale%20describes%20the%20tendency,re%2Darchitecting%20at%20critical%20moments)
 
-## Non blocking I/O
+## What is Non blocking I/O?
 Non-blocking I/O avoids the client being blocked while waiting for a request to be accepted by the **transport layer** during one-way messaging for connection-oriented protocols(e.g. TCP).
 <br />
 For connection-oriented protocols, there is a limit to the amount of data that can be put in a network protocol queue. The limit depends on the transport protocols used. When a client sending a request reaches the data limit, this client is blocked from processing until its request has entered the queue. You cannot determine how long a message will wait before being added to the queue.
