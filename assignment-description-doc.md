@@ -2,23 +2,23 @@
 
 **Note**: _do not use threads_ for this assignment. We will not uses the `pthread` library for this project. That is, we are going to use single thread.
 
-## Threads start wearing out
-
-One of the common ways of handling multiple clients at a time is to use threads. Sounds simple enough. A client connects, we spawn a new thread to handle it, and then that thread can clean up after itself once it's done. What's the catch?
-
-Well, that usually works okay up until a point. After that, your server won't scale as fast. And in the modern world, you have to do things web scale (TM).
+## Threads?
+[link 1](https://stackoverflow.com/questions/10347613/why-would-multi-threaded-applications-in-general-scale-bad)
+<br />
+[link 2](https://www.nutanix.com/blog/understanding-web-scale-properties#:~:text=Web%2Dscale%20describes%20the%20tendency,re%2Darchitecting%20at%20critical%20moments)
 
 ## Non blocking I/O
-
-Well, what can we do about this? Maybe we could keep a thread pool, that is, have a fixed number of threads, and have them service the connections. However, it's an M:N mapping this time (M connections, N threads). But wait, how do I multiplex all these different connections, and handle all those threads?
-
-Non-blocking I/O is your friend here. Remember how regular calls to read(), accept() etc. block until there's data or a new connection available? (If you don't, try it out! Trace how your server code blocks in read() until your client sends some data!). Well, non-blocking I/O does exactly what it says, you structure your application in such a way that works with the data that's already present (in the TCP buffers), not block for data that may or may not arrive! Functions that help you with this are `select()`, `poll()`, and `epoll()`.
-
-Think of it as an event driven system. At a high level, you maintain a set of file descriptors (could map to files, pipes, network sockets, etc.) that you're interested in, and call the appropriate wait() function on that set of descriptors. Your program waits until one (or more) of those descriptors have some data available (in a server scenario, when a client has actually sent data). When data is available, it's like an 'event' occurred, so your program exits the wait() call, and can iterate over the descriptors that have data, process each of them, and then go back to wait()-ing for additional data to arrive.
-
+Non-blocking I/O avoids the client being blocked while waiting for a request to be accepted by the **transport layer** during one-way messaging for connection-oriented protocols(e.g. TCP).
+<br />
+For connection-oriented protocols, there is a limit to the amount of data that can be put in a network protocol queue. The limit depends on the transport protocols used. When a client sending a request reaches the data limit, this client is blocked from processing until its request has entered the queue. You cannot determine how long a message will wait before being added to the queue.
+<br />
+In non-blocking I/O, when the transport queue is full, there is an additional buffer available between the client and the transport layer. As requests not accepted by the transport queue can be stored in this buffer, the client is not blocked. The client is free to continue processing as soon as it has put the request in the buffer. The client does not wait until the request is put in the queue and does not receive information on the status of the request after the buffer accepts the request.
+<br />
+By using non-blocking I/O you gain further processing time as compared to two-way and one-way messaging. The client can send requests in succession without being blocked from processing. (i.e. when you `read()` or `write()`)
+Functions that help you with this are `select()`, `poll()`, and `epoll()`.
 ## The Problem
 
-You'll be writing the client and server for a simplified file sharing application. TCP is used for everything here, so reliability is taken care of. The server uses non-blocking I/O (with epoll) to handle concurrent requests. The application supports four basic operations - `GET`, `PUT`, `LIST` and `DELETE`. Their functions are as follows:
+You'll be writing the client and server for a simplified file sharing application. TCP is used for everything here, so reliability is taken care of. The server doesn't have to use non-blocking I/O (with epoll) to handle concurrent requests, as this is way more complicated than what we want you to implement. However, you are encouraged to try that when you have extra time. The application should support four basic operations - `GET`, `PUT`, `LIST` and `DELETE`. Their functions are as follows:
 
 `GET` - Client downloads (GETs) a file from the server
 `PUT` - Client uploads (PUTs) a file to the server
