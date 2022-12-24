@@ -22,6 +22,10 @@ More information if you want to know:
 [edge-triggered?](https://en.wikipedia.org/wiki/Interrupt#Edge-triggered)
 [level-triggered?](https://en.wikipedia.org/wiki/Interrupt#Level-triggered)
 
+## Reusable Addresses and Ports
+Make sure you use SO_REUSEADDR and SO_REUSEPORT to ensure bind() doesn’t fail in the event that your server or client crashes.
+<br />
+[the differences between the two and why they are necessary?](https://stackoverflow.com/questions/14388706/how-do-so-reuseaddr-and-so-reuseport-differ)
 ## The Problem
 
 You'll be writing the client and server for a simplified file sharing application. TCP is used for everything here, so reliability is taken care of. The server doesn't have to use non-blocking I/O to handle concurrent requests, as this is way more complicated than our goal of this assignment. However, you are encouraged to try that when you have extra time.
