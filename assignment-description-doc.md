@@ -37,5 +37,89 @@ For simplicity, you can assume that there are no conflicting requests (that is, 
 ## The Protocol
 
 This is a text-based protocol (similar to HTTP and FTP). The client sends plaintext requests along with some binary data (depending on the operation), and then the server responds with plaintext containing either error messages or optional binary data. The binary data in this case is the file being transferred, if it is a `GET` or `PUT` request. The maximum header length (header is part before data) for both the request and response is 1024 bytes.  The format for the protocol is as follows:
-### Client Request:
 
+### Client Request:
+```
+[REQUEST] [Filename]\n
+[File Size][Binary Data]
+```
+* [REQUEST]: One of `GET`, `PUT` and `DELETE`.
+* [Filename]: the filename on the server.
+* [File Size]: number of bytes of the file you want to send. Type: `size_t`
+* [Binary Data]: File contents. For this binary data, we will be using the Little Endian form of byte ordering (the system used by Intel hardware) while sending `size_t` over the network. Because of this, you do not need to convert the byte ordering (e.g. using `htol`) in either the client or server.
+* [File size] and [Binary Data] are only present for a `PUT` request. 
+
+### Server Request:
+[RESPONSE]\n
+[File size][Binary Data]
+* [RESPONSE]: One of `OK` and `ERROR`.
+* [File Size]: number of bytes of the file the client requesting for. Type: `size_t`
+* [Binary Data]: File contents. For this binary data, we will be using the Little Endian form of byte ordering (the system used by Intel hardware) while sending `size_t` over the network. Because of this, you do not need to convert the byte ordering (e.g. using `htol`) in either the client or server.
+* [File size] and [Binary Data] are only present for a `GET` request. 
+
+## The Usage:
+### Client Side: 
+To use the client: 
+```
+$ ./client <serverIP>:<server_port> [REQUEST] [remote_filename] [local_filename]
+```
+### Server Side:
+```
+$ ./server <port_number>
+```
+
+## Examples:
+
+### `GET`:
+#### Client Side:
+```
+$ ./client 127.0.0.1:4321 GET hello.txt hello_copy.txt 
+```
+```
+GET hello.txt\n
+```
+#### Server Side:
+```
+$ ./server 4321
+```
+```
+OK\n
+13 hello world!\n
+```
+
+Through this, we are downloading `hello.txt` from `127.0.0.1` and this process is running on port 4321. The corresponding file should appear on client side with name `hello_copy.txt`, while the content should match that of `hello.txt` (you can use `diff` to check this locally).
+
+### `PUT`:
+#### Client Side:
+```
+$ ./client 127.0.0.1:4321 PUT hello_copy.txt hello.txt 
+```
+```
+PUT hello.txt\n
+13 hello world!\n
+```
+#### Server Side:
+```
+$ ./server 4321
+```
+```
+OK\n
+```
+Through this, we are uploading `hello.txt` to `127.0.0.1` and this process is running on port 4321. The corresponding file should appear on server side with name `hello_copy.txt`, while the content should match that of `hello.txt` (you can use `diff` to check this locally).
+
+### `DELETE`:
+#### Client Side:
+```
+$ ./client 127.0.0.1:4321 DELETE hello.txt 
+```
+```
+DELETE hello.txt\n
+```
+#### Server Side:
+```
+$ ./server 4321
+```
+```
+ERROR\n
+```
+Through this, we are deleting `hello.txt` on `127.0.0.1` and this process is running on port 4321. The corresponding file should disappear on server side, which has the name `hello.txt`. Since the example says `ERROR`, the `hello.txt` should not be deleted. That is, nothing should be done with it. If the respond is `OK`, then `hello.txt` should be deleted. 
